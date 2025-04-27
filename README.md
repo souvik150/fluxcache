@@ -22,7 +22,7 @@
 ## 📦 Installation
 
 ```bash
-go get github.com/your-username/fluxcache
+go get github.com/souvik150/fluxcache
 ```
 
 ---
