@@ -6,6 +6,7 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 
@@ -111,6 +112,17 @@ func (f *FluxCache) Get(key string) (any, error) {
 	return b, nil
 }
 
+func (f *FluxCache) IncrInt(key string, delta int64) (int64, error) {
+	// durable op
+	newVal, err := f.rdb.IncrBy(f.ctx, key, delta)
+	if err != nil {
+		return 0, err
+	}
+	// hot copy
+	f.mem.Set(key, newVal)
+	return newVal, nil
+}
+
 // SetProto saves a proto.Message compressed into memory and Redis
 func (f *FluxCache) SetProto(key string, msg proto.Message) error {
 	data, err := protohelper.Marshal(msg)
@@ -149,4 +161,8 @@ func (f *FluxCache) Delete(key string) error {
 		log.Error().Str("key", key).Err(err).Msg("FluxCache: Redis Delete failed")
 	}
 	return err
+}
+
+func (f *FluxCache) InjectRedisOutage(d time.Duration) {
+	f.rdb.InjectRedisOutage(d)
 }

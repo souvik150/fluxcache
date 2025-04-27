@@ -45,6 +45,19 @@ func (r *RedisClient) Delete(ctx context.Context, key string) error {
 	})
 }
 
+func (r *RedisClient) IncrBy(ctx context.Context, key string, delta int64) (int64, error) {
+	var res int64
+	err := withRetry(func() error {
+		val, err := r.client.IncrBy(ctx, key, delta).Result()
+		if err != nil {
+			return err
+		}
+		res = val
+		return nil
+	})
+	return res, err
+}
+
 func (r *RedisClient) ScanKeys(ctx context.Context, pattern string) ([]string, error) {
 	var cursor uint64
 	var keys []string
@@ -73,4 +86,14 @@ func withRetry(fn func() error) error {
 		time.Sleep(time.Millisecond * 100) // simple backoff
 	}
 	return err
+}
+
+func (r *RedisClient) InjectRedisOutage(d time.Duration) {
+	orig := r.client
+
+	r.client = redis.NewClient(&redis.Options{Addr: "localhost:0"})
+
+	time.AfterFunc(d, func() {
+		r.client = orig
+	})
 }
