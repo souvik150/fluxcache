@@ -2,9 +2,10 @@ package syncer
 
 import (
 	"context"
-	"fluxcache/internal/cache"
-	"fluxcache/internal/redis"
 	"time"
+
+	"github.com/souvik150/fluxcache/internal/cache"
+	"github.com/souvik150/fluxcache/internal/redis"
 )
 
 func SyncFromRedis(ctx context.Context, rdb *redis.RedisClient, mem *cache.MemoryCache, pattern string) {

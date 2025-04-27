@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 
-	"fluxcache/internal/cache"
-	"fluxcache/internal/protohelper"
-	"fluxcache/internal/redis"
-	"fluxcache/internal/syncer"
+	"github.com/rs/zerolog/log"
+	"github.com/souvik150/fluxcache/internal/cache"
+	"github.com/souvik150/fluxcache/internal/protohelper"
+	"github.com/souvik150/fluxcache/internal/redis"
+	"github.com/souvik150/fluxcache/internal/syncer"
 )
 
 type FluxCache struct {
