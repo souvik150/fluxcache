@@ -11,7 +11,7 @@ type entry struct {
 }
 
 type MemoryCache struct {
-	mu       sync.Mutex
+	mu       sync.RWMutex 
 	store    map[string]*list.Element
 	eviction *list.List
 	capacity int
