@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rs/zerolog/log"
+
 	"github.com/souvik150/fluxcache/internal/cache"
 	"github.com/souvik150/fluxcache/internal/protohelper"
 	"github.com/souvik150/fluxcache/internal/redis"
@@ -23,6 +24,7 @@ type FluxCache struct {
 func NewFluxCache(ctx context.Context, opts Options) (*FluxCache, error) {
 	rdb := redis.NewRedisClient(opts.RedisAddr, opts.RedisPassword, opts.RedisDB)
 	mem := cache.NewMemoryCache(opts.MemoryCap)
+	
 
 	fc := &FluxCache{
 		mem: mem,
