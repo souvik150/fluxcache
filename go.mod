@@ -1,4 +1,4 @@
-module fluxcache
+module github.com/souvik150/fluxcache
 
 go 1.24.2
 
