@@ -2,7 +2,10 @@ package fluxcache
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"reflect"
+	"strconv"
 
 	"google.golang.org/protobuf/proto"
 
@@ -24,7 +27,6 @@ type FluxCache struct {
 func NewFluxCache(ctx context.Context, opts Options) (*FluxCache, error) {
 	rdb := redis.NewRedisClient(opts.RedisAddr, opts.RedisPassword, opts.RedisDB)
 	mem := cache.NewMemoryCache(opts.MemoryCap)
-	
 
 	fc := &FluxCache{
 		mem: mem,
@@ -47,28 +49,43 @@ func NewFluxCache(ctx context.Context, opts Options) (*FluxCache, error) {
 	return fc, nil
 }
 
+func encode(value any) ([]byte, error) {
+	switch v := value.(type) {
+	case []byte:
+		return v, nil
+	case string:
+		return []byte(v), nil
+	case int, int8, int16, int32, int64:
+		return []byte(strconv.FormatInt(reflect.ValueOf(v).Int(), 10)), nil
+	case uint, uint8, uint16, uint32, uint64:
+		return []byte(strconv.FormatUint(reflect.ValueOf(v).Uint(), 10)), nil
+	case float32, float64:
+		return []byte(strconv.FormatFloat(reflect.ValueOf(v).Float(), 'g', -1, 64)), nil
+	case bool:
+		if v {
+			return []byte("1"), nil
+		}
+		return []byte("0"), nil
+	default:
+		return json.Marshal(v)
+	}
+}
+
 // Set saves a key-value pair into memory and Redis
 func (f *FluxCache) Set(key string, value any) error {
 	f.mem.Set(key, value)
 	log.Debug().Str("key", key).Msg("FluxCache: Set in memory")
 
-	switch v := value.(type) {
-	case []byte:
-		err := f.rdb.Set(f.ctx, key, v)
-		if err == nil {
-			log.Debug().Str("key", key).Msg("FluxCache: Set in Redis (bytes)")
-		}
+	payload, err := encode(value)
+	if err != nil {
+		log.Error().Err(err).Str("key", key).Msg("FluxCache: encode failed")
 		return err
-	case string:
-		err := f.rdb.Set(f.ctx, key, []byte(v))
-		if err == nil {
-			log.Debug().Str("key", key).Msg("FluxCache: Set in Redis (string)")
-		}
-		return err
-	default:
-		log.Error().Str("key", key).Msg("FluxCache: Unsupported type for Set")
-		return errors.New("unsupported value type for Set")
 	}
+	if err := f.rdb.Set(f.ctx, key, payload); err != nil {
+		return err
+	}
+	log.Debug().Str("key", key).Msg("FluxCache: Set in Redis")
+	return nil
 }
 
 // Get fetches a value from memory first, fallback to Redis
