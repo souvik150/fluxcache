@@ -36,7 +36,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/your-username/fluxcache/pkg/fluxcache"
+	"github.com/souvik150/fluxcache/pkg/fluxcache"
 )
 
 func main() {
